@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PASA</string>
+    <string name="setup_title">Setup PASA</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="security_status_title">Security Status</string>
+</resources>
