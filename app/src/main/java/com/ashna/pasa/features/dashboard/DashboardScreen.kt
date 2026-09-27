@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Telegram
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.*
@@ -66,7 +65,7 @@ fun DashboardScreen(
                 StatusCard(
                     title = "Telegram",
                     subtitle = if (status.telegramConfigured) "Configured" else "Not Configured",
-                    icon = Icons.Default.Telegram,
+                    icon = Icons.Default.Security,
                     containerColor = if (status.telegramConfigured)
                         MaterialTheme.colorScheme.primaryContainer
                     else
