@@ -141,3 +141,199 @@ fun WelcomeStep(onNext: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun DeviceInfoStep(
+    deviceId: String,
+    deviceName: String,
+    onNext: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Device Information",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        OutlinedCard {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Device Name",
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = deviceName,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Device ID",
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = deviceId,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Continue")
+            Icon(Icons.Default.ArrowForward, contentDescription = null)
+        }
+    }
+}
+
+@Composable
+fun TelegramConfigStep(
+    botToken: String,
+    chatId: String,
+    onBotTokenChange: (String) -> Unit,
+    onChatIdChange: (String) -> Unit,
+    onNext: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Telegram Configuration",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        OutlinedTextField(
+            value = botToken,
+            onValueChange = onBotTokenChange,
+            label = { Text("Bot Token") },
+            placeholder = { Text("123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11") },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
+        OutlinedTextField(
+            value = chatId,
+            onValueChange = onChatIdChange,
+            label = { Text("Chat ID") },
+            placeholder = { Text("123456789") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "⚠️ Chat ID Security Warning",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Entering a Chat ID alone does NOT prove you own that Telegram account. Phase 2 will add proper verification.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = botToken.isNotBlank() && chatId.isNotBlank()
+        ) {
+            Text("Test Connection")
+            Icon(Icons.Default.ArrowForward, contentDescription = null)
+        }
+    }
+}
+
+@Composable
+fun TestConnectionStep(
+    botUsername: String,
+    connectionTestPassed: Boolean,
+    isTestingConnection: Boolean,
+    errorMessage: String?,
+    onTestConnection: () -> Unit,
+    onNext: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Test Connection",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        
+        if (!connectionTestPassed && !isTestingConnection) {
+            Button(
+                onClick = onTestConnection,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Test Telegram Connection")
+            }
+        }
+        
+        if (isTestingConnection) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Text("Testing connection...", modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+        
+        if (connectionTestPassed) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Connection Successful",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    if (botUsername.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Bot: @$botUsername")
+                    }
+                }
+            }
+        }
+        
+        errorMessage?.let { error ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text(
+                    text = error,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        Button(
+            onClick = onNext,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = connectionTestPassed
+        ) {
+            Text("Complete Setup")
+            Icon(Icons.Default.Check, contentDescription = null)
+        }
+    }
+}
