@@ -1,0 +1,109 @@
+name: PASA Phase 1 Android Build
+
+on:
+  push:
+    branches:
+      - main
+      - phase1-initial-setup
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build PASA Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.2
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.2'
+
+      - name: Verify project structure
+        run: |
+          test -f settings.gradle.kts
+          test -f build.gradle.kts
+          test -f gradle.properties
+          test -f app/build.gradle.kts
+          test -f app/src/main/AndroidManifest.xml
+          echo "Project structure OK."
+
+      - name: Verify Phase 1 restrictions
+        run: |
+          if grep -R "POST_NOTIFICATIONS" app/src/main 2>/dev/null; then
+            echo "ERROR: POST_NOTIFICATIONS detected."
+            exit 1
+          fi
+
+          if grep -R "ACCESS_FINE_LOCATION\|ACCESS_COARSE_LOCATION" app/src/main 2>/dev/null; then
+            echo "ERROR: Location permission detected."
+            exit 1
+          fi
+
+          if grep -R "FOREGROUND_SERVICE" app/src/main 2>/dev/null; then
+            echo "ERROR: Foreground service detected."
+            exit 1
+          fi
+
+          echo "Phase 1 restrictions OK."
+
+      - name: Check Gradle version
+        run: gradle --version
+
+      - name: Clean build
+        run: gradle clean
+
+      - name: Assemble Debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Verify APK exists
+        run: |
+          echo "=== APK OUTPUT ==="
+
+          find app/build/outputs/apk \
+            -type f \
+            -name "*.apk" \
+            -print
+
+          APK_COUNT=$(find app/build/outputs/apk \
+            -type f \
+            -name "*.apk" | wc -l)
+
+          if [ "$APK_COUNT" -eq 0 ]; then
+            echo "ERROR: No APK was generated."
+            exit 1
+          fi
+
+          echo "APK generated successfully."
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PASA-Phase1-debug-apk
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+      - name: Build Gate Result
+        run: |
+          echo "========================================"
+          echo " PASA PHASE 1 BUILD GATE"
+          echo "========================================"
+          echo "BUILD STATUS: VERIFIED"
+          echo "APK STATUS: GENERATED"
+          echo "========================================"
