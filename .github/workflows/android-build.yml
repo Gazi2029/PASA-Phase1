@@ -25,30 +25,29 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle 8.2
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.2'
 
       - name: Verify project structure
         run: |
-          echo "=== PASA PROJECT STRUCTURE ==="
           test -f settings.gradle.kts
           test -f build.gradle.kts
           test -f gradle.properties
           test -f app/build.gradle.kts
           test -f app/src/main/AndroidManifest.xml
-          echo "Required project files found."
+          echo "Project structure OK."
 
       - name: Verify Phase 1 restrictions
         run: |
-          echo "=== CHECKING PHASE 1 RESTRICTIONS ==="
-
           if grep -R "POST_NOTIFICATIONS" app/src/main 2>/dev/null; then
-            echo "ERROR: POST_NOTIFICATIONS permission detected."
+            echo "ERROR: POST_NOTIFICATIONS detected."
             exit 1
           fi
 
@@ -58,39 +57,33 @@ jobs:
           fi
 
           if grep -R "FOREGROUND_SERVICE" app/src/main 2>/dev/null; then
-            echo "ERROR: Foreground service permission detected."
+            echo "ERROR: Foreground service detected."
             exit 1
           fi
 
-          echo "Phase 1 permission restrictions passed."
+          echo "Phase 1 restrictions OK."
 
-      - name: Check Gradle wrapper
-        run: |
-          if [ ! -f "./gradlew" ]; then
-            echo "ERROR: Gradle wrapper is missing."
-            echo "The project must contain gradlew and gradle/wrapper."
-            exit 1
-          fi
-
-          if [ ! -f "./gradle/wrapper/gradle-wrapper.properties" ]; then
-            echo "ERROR: Gradle wrapper properties are missing."
-            exit 1
-          fi
-
-          chmod +x ./gradlew
+      - name: Check Gradle version
+        run: gradle --version
 
       - name: Clean build
-        run: ./gradlew clean
+        run: gradle clean
 
       - name: Assemble Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: gradle assembleDebug --stacktrace
 
       - name: Verify APK exists
         run: |
           echo "=== APK OUTPUT ==="
-          find app/build/outputs/apk -type f -name "*.apk" -print
 
-          APK_COUNT=$(find app/build/outputs/apk -type f -name "*.apk" | wc -l)
+          find app/build/outputs/apk \
+            -type f \
+            -name "*.apk" \
+            -print
+
+          APK_COUNT=$(find app/build/outputs/apk \
+            -type f \
+            -name "*.apk" | wc -l)
 
           if [ "$APK_COUNT" -eq 0 ]; then
             echo "ERROR: No APK was generated."
@@ -113,5 +106,4 @@ jobs:
           echo "========================================"
           echo "BUILD STATUS: VERIFIED"
           echo "APK STATUS: GENERATED"
-          echo "PHASE 2 GATE: READY FOR REVIEW"
           echo "========================================"
